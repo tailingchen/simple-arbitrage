@@ -7,3 +7,12 @@
 .env
 .env.local
 .env.production
+
+# Foundry files
+/out
+/cache
+/broadcast
+/deployments/*.env
+
+# Keep deployment JSON files
+!/deployments/*.json
