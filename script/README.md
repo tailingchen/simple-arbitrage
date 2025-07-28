@@ -1,8 +1,15 @@
 # Deployment Scripts
 
-This directory contains scripts for deploying the arbitrage bot contracts.
+This directory contains scripts for deploying and testing the arbitrage bot contracts.
 
-## Bash Scripts
+## Simulation Scripts
+
+For testing deployments before going to mainnet/testnet:
+
+- `start-fork.sh` - Starts an Anvil fork of Sepolia for local testing
+- `simulate-deploy.sh` - Deploys contracts to the local fork for testing
+
+## Deployment Scripts
 
 - `deploy-all-contracts.sh` - Deploys both BundleExecutor and FlashBotsUniswapQuery contracts
 - `deploy-bundle-executor.sh` - Deploys only the BundleExecutor contract (main arbitrage executor)
@@ -26,16 +33,35 @@ These scripts:
 - Support custom WETH addresses via environment variables
 - Save deployment information with block number and timestamp
 
-## Usage
+## Recommended Workflow
 
-1. Set up your `.env` file with required variables
-2. Run the desired deployment script:
+1. **Test locally first:**
+   ```bash
+   # Terminal 1: Start fork
+   ./script/start-fork.sh
+   
+   # Terminal 2: Simulate deployment
+   ./script/simulate-deploy.sh
+   ```
+
+2. **Deploy to testnet/mainnet:**
    ```bash
    # Deploy everything
    ./script/deploy-all-contracts.sh
    
-   # Deploy individual contracts
+   # Or deploy individual contracts
    ./script/deploy-bundle-executor.sh
    ./script/deploy-uniswap-query.sh
    ```
-3. Check `deployments/` directory for deployment details
+
+3. **Check deployment results:**
+   - Simulation: `deployments/11155111.json` (chain ID for Sepolia fork)
+   - Sepolia: `deployments/sepolia.json`
+   - Mainnet: `deployments/mainnet.json`
+
+## Environment Setup
+
+- `.env` - Production environment variables
+- `.env.local.example` - Template for local testing with Anvil
+
+Always test deployments on a fork before deploying to real networks!

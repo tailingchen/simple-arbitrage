@@ -23,7 +23,50 @@ cp .env.example .env
    - `INITIAL_WETH_AMOUNT`: (Optional) Initial WETH to deposit in wei
    - `WETH_ADDRESS`: (Optional) Custom WETH address for other chains
 
+## Simulate Deployment (Recommended)
+
+Before deploying to a real network, it's recommended to test the deployment on a local fork:
+
+### 1. Start Local Fork
+In one terminal, start Anvil to fork Sepolia:
+
+```bash
+./script/start-fork.sh
+```
+
+Options:
+- `--block <number>` - Fork at specific block (default: latest)
+- `--port <port>` - Use different port (default: 8545)
+
+### 2. Simulate Deployment
+In another terminal, run the simulation:
+
+```bash
+./script/simulate-deploy.sh
+```
+
+This will:
+- Deploy both contracts to the local fork
+- Use Anvil's test account with 10,000 ETH
+- Save deployment info to `deployments/` directory
+- Verify that deployment scripts work correctly
+
+### 3. Local Testing Setup
+For more comprehensive local testing:
+
+```bash
+# Copy local environment template
+cp .env.local.example .env.local
+
+# Edit .env.local with your settings
+# Then use it for local testing
+source .env.local
+npm run start
+```
+
 ## Deploy to Sepolia
+
+After successful simulation, deploy to the real network:
 
 ### Deploy All Contracts
 To deploy both BundleExecutor and FlashBotsUniswapQuery:
