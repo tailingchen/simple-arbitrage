@@ -9,6 +9,7 @@ import { FACTORY_ADDRESSES } from "./addresses";
 import { Arbitrage } from "./Arbitrage";
 import { get } from "https"
 import { getDefaultRelaySigningKey } from "./utils";
+import { logger } from "./logger";
 
 const ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || "http://127.0.0.1:8545"
 const PRIVATE_KEY = process.env.PRIVATE_KEY || ""
@@ -47,25 +48,83 @@ function healthcheck() {
 }
 
 async function main() {
-  console.log("Searcher Wallet Address: " + await arbitrageSigningWallet.getAddress())
-  console.log("Flashbots Relay Signing Wallet Address: " + await flashbotsRelaySigningWallet.getAddress())
+  logger.info('STARTUP', '🚀 Starting MEV Arbitrage Bot');
+  logger.info('CONFIG', `RPC URL: ${ETHEREUM_RPC_URL}`);
+  logger.info('CONFIG', `Bundle Executor: ${BUNDLE_EXECUTOR_ADDRESS}`);
+  logger.info('CONFIG', `Miner Reward: ${MINER_REWARD_PERCENTAGE}%`);
+  
+  const searcherAddress = await arbitrageSigningWallet.getAddress();
+  const relaySignerAddress = await flashbotsRelaySigningWallet.getAddress();
+  
+  logger.info('WALLET', `Searcher Wallet: ${searcherAddress}`);
+  logger.info('WALLET', `Flashbots Relay Signer: ${relaySignerAddress}`);
+  
+  logger.info('SETUP', 'Creating Flashbots provider...');
   const flashbotsProvider = await FlashbotsBundleProvider.create(provider, flashbotsRelaySigningWallet);
+  logger.success('SETUP', 'Flashbots provider created');
+  
   const arbitrage = new Arbitrage(
     arbitrageSigningWallet,
     flashbotsProvider,
-    new Contract(BUNDLE_EXECUTOR_ADDRESS, BUNDLE_EXECUTOR_ABI, provider) )
+    new Contract(BUNDLE_EXECUTOR_ADDRESS, BUNDLE_EXECUTOR_ABI, provider)
+  );
 
+  logger.info('MARKETS', 'Loading Uniswap markets...');
   const markets = await UniswappyV2EthPair.getUniswapMarketsByToken(provider, FACTORY_ADDRESSES);
+  logger.success('MARKETS', `Loaded ${markets.allMarketPairs.length} market pairs`);
+  logger.info('MONITOR', 'Starting block monitoring...');
+  let processedBlocks = 0;
+  
   provider.on('block', async (blockNumber) => {
+    processedBlocks++;
+    logger.info('BLOCK', `New block: #${blockNumber} (processed: ${processedBlocks})`);
+    
+    logger.debug('RESERVES', 'Updating market reserves...');
+    const updateStart = Date.now();
     await UniswappyV2EthPair.updateReserves(provider, markets.allMarketPairs);
+    logger.debug('RESERVES', `Updated in ${Date.now() - updateStart}ms`);
+    
+    logger.debug('EVALUATE', 'Searching for arbitrage opportunities...');
+    const evalStart = Date.now();
     const bestCrossedMarkets = await arbitrage.evaluateMarkets(markets.marketsByToken);
+    logger.debug('EVALUATE', `Evaluation completed in ${Date.now() - evalStart}ms`);
+    
     if (bestCrossedMarkets.length === 0) {
-      console.log("No crossed markets")
+      logger.info('ARBITRAGE', 'No profitable opportunities found');
       return
     }
-    bestCrossedMarkets.forEach(Arbitrage.printCrossedMarket);
-    arbitrage.takeCrossedMarkets(bestCrossedMarkets, blockNumber, MINER_REWARD_PERCENTAGE).then(healthcheck).catch(console.error)
+    
+    logger.success('ARBITRAGE', `Found ${bestCrossedMarkets.length} opportunities!`);
+    bestCrossedMarkets.forEach(market => {
+      logger.arbitrage(market);
+      Arbitrage.printCrossedMarket(market);
+    });
+    
+    logger.info('EXECUTE', 'Attempting to capture arbitrage...');
+    arbitrage.takeCrossedMarkets(bestCrossedMarkets, blockNumber, MINER_REWARD_PERCENTAGE)
+      .then(() => {
+        logger.success('EXECUTE', 'Bundle submitted successfully');
+        healthcheck();
+      })
+      .catch(error => {
+        logger.error('EXECUTE', 'Failed to submit bundle', error);
+        console.error(error);
+      });
   })
 }
 
-main();
+main().catch(error => {
+  logger.error('STARTUP', 'Failed to start bot', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  logger.info('SHUTDOWN', 'Received SIGINT, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  logger.info('SHUTDOWN', 'Received SIGTERM, shutting down gracefully...');
+  process.exit(0);
+});
