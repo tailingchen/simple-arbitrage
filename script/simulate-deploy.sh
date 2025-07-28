@@ -32,7 +32,7 @@ cat >> $TEMP_ENV << EOF
 
 # Simulation overrides
 PRIVATE_KEY=$TEST_PRIVATE_KEY
-SEPOLIA_RPC_URL=$FORK_RPC_URL
+RPC_URL=$FORK_RPC_URL
 EOF
 
 echo -e "${YELLOW}Using test account:${NC}"
@@ -94,4 +94,4 @@ echo "  - deployments/11155111.json (BundleExecutor)"
 echo "  - deployments/11155111-query.json (FlashBotsUniswapQuery)"
 echo ""
 echo -e "${YELLOW}Note: These are simulation deployments on a local fork.${NC}"
-echo -e "${YELLOW}To deploy to real Sepolia, use ./script/deploy-all-contracts.sh${NC}"
+echo -e "${YELLOW}To deploy to real network, use ./script/deploy-all-contracts.sh${NC}"

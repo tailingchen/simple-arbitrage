@@ -8,7 +8,7 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo "🚀 Deploying FlashBotsUniswapQuery to Sepolia..."
+echo "🚀 Deploying FlashBotsUniswapQuery..."
 
 # Check required environment variables
 if [ -z "$PRIVATE_KEY" ]; then
@@ -16,8 +16,8 @@ if [ -z "$PRIVATE_KEY" ]; then
     exit 1
 fi
 
-if [ -z "$SEPOLIA_RPC_URL" ]; then
-    echo -e "${RED}Error: SEPOLIA_RPC_URL not set in .env${NC}"
+if [ -z "$RPC_URL" ]; then
+    echo -e "${RED}Error: RPC_URL not set in .env${NC}"
     exit 1
 fi
 
@@ -27,7 +27,7 @@ mkdir -p deployments
 # Deploy using Foundry script
 echo "Deploying FlashBotsUniswapQuery contract..."
 forge script script/deploy/DeployUniswapFlashQuery.s.sol:DeployUniswapFlashQuery \
-    --rpc-url $SEPOLIA_RPC_URL \
+    --rpc-url $RPC_URL \
     --broadcast \
     --verify \
     -vvvv
@@ -35,7 +35,7 @@ forge script script/deploy/DeployUniswapFlashQuery.s.sol:DeployUniswapFlashQuery
 # Check if deployment was successful
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ FlashBotsUniswapQuery deployed successfully!${NC}"
-    echo -e "${GREEN}Check deployments/sepolia-query.json for deployment details${NC}"
+    echo -e "${GREEN}Check deployments/ directory for deployment details${NC}"
 else
     echo -e "${RED}Deployment failed!${NC}"
     exit 1
@@ -44,5 +44,5 @@ fi
 echo -e "${GREEN}🎉 Deployment complete!${NC}"
 echo ""
 echo "Next steps:"
-echo "1. Check deployments/sepolia-query.json for the contract address"
+echo "1. Check deployments/ directory for the contract address"
 echo "2. The query contract can be used to efficiently fetch Uniswap pair data"

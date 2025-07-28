@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Deploying all contracts to Sepolia...${NC}"
+echo -e "${BLUE}🚀 Deploying all contracts...${NC}"
 echo ""
 
 # Check required environment variables
@@ -18,8 +18,8 @@ if [ -z "$PRIVATE_KEY" ]; then
     exit 1
 fi
 
-if [ -z "$SEPOLIA_RPC_URL" ]; then
-    echo -e "${RED}Error: SEPOLIA_RPC_URL not set in .env${NC}"
+if [ -z "$RPC_URL" ]; then
+    echo -e "${RED}Error: RPC_URL not set in .env${NC}"
     exit 1
 fi
 
@@ -29,7 +29,7 @@ mkdir -p deployments
 # Deploy BundleExecutor
 echo -e "${BLUE}[1/2] Deploying BundleExecutor...${NC}"
 forge script script/deploy/DeployBundleExecutor.s.sol:DeployBundleExecutor \
-    --rpc-url $SEPOLIA_RPC_URL \
+    --rpc-url $RPC_URL \
     --broadcast \
     --verify \
     -vvvv
@@ -44,7 +44,7 @@ echo ""
 # Deploy FlashBotsUniswapQuery
 echo -e "${BLUE}[2/2] Deploying FlashBotsUniswapQuery...${NC}"
 forge script script/deploy/DeployUniswapFlashQuery.s.sol:DeployUniswapFlashQuery \
-    --rpc-url $SEPOLIA_RPC_URL \
+    --rpc-url $RPC_URL \
     --broadcast \
     --verify \
     -vvvv
@@ -59,10 +59,9 @@ echo ""
 echo -e "${GREEN}🎉 All contracts deployed successfully!${NC}"
 echo ""
 echo "Deployment files:"
-echo "  - BundleExecutor: deployments/sepolia.json"
-echo "  - FlashBotsUniswapQuery: deployments/sepolia-query.json"
+echo "  - Check deployments/ directory for contract addresses"
 echo ""
 echo "Next steps:"
-echo "1. Copy the BUNDLE_EXECUTOR_ADDRESS from deployments/sepolia.json to your .env file"
+echo "1. Copy the BUNDLE_EXECUTOR_ADDRESS from deployments/ to your .env file"
 echo "2. Fund the BundleExecutor contract with WETH if needed"
 echo "3. Run the arbitrage bot with: npm run start"

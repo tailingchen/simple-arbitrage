@@ -17,7 +17,7 @@ For testing deployments before going to mainnet/testnet:
 
 All scripts:
 - Use environment variables from `.env`
-- Deploy to the network specified by `SEPOLIA_RPC_URL` or `MAINNET_RPC_URL`
+- Deploy to the network specified by `RPC_URL` (supports Sepolia, Mainnet, or any EVM network)
 - Automatically verify contracts on Etherscan if `ETHERSCAN_API_KEY` is provided
 - Save deployment info to JSON files in the `deployments/` directory
 

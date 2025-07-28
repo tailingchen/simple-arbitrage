@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide explains how to deploy the BundleExecutor contract to Sepolia testnet using Foundry.
+This guide explains how to deploy the BundleExecutor contract to Ethereum networks using Foundry.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ cp .env.example .env
 
 2. Edit `.env` and add:
    - `PRIVATE_KEY`: Your wallet private key (with 0x prefix)
-   - `SEPOLIA_RPC_URL`: Sepolia RPC endpoint (default provided)
+   - `RPC_URL`: RPC endpoint for your target network (Sepolia, Mainnet, etc.)
    - `ETHERSCAN_API_KEY`: (Optional) For contract verification
    - `EXECUTOR_ADDRESS`: (Optional) Address that will execute bundles, defaults to deployer
    - `INITIAL_WETH_AMOUNT`: (Optional) Initial WETH to deposit in wei
@@ -28,7 +28,7 @@ cp .env.example .env
 Before deploying to a real network, it's recommended to test the deployment on a local fork:
 
 ### 1. Start Local Fork
-In one terminal, start Anvil to fork Sepolia:
+In one terminal, start Anvil to fork your target network:
 
 ```bash
 ./script/start-fork.sh
@@ -64,9 +64,9 @@ source .env.local
 npm run start
 ```
 
-## Deploy to Sepolia
+## Deploy to Network
 
-After successful simulation, deploy to the real network:
+After successful simulation, deploy to your target network:
 
 ### Deploy All Contracts
 To deploy both BundleExecutor and FlashBotsUniswapQuery:
@@ -100,13 +100,13 @@ If you prefer to deploy manually:
 ```bash
 # Using Foundry script (recommended)
 forge script script/deploy/DeployBundleExecutor.s.sol:DeployBundleExecutor \
-    --rpc-url $SEPOLIA_RPC_URL \
+    --rpc-url $RPC_URL \
     --broadcast \
     --verify
 
 # Or using forge create
 forge create contracts/BundleExecutor.sol:FlashBotsMultiCall \
-    --rpc-url $SEPOLIA_RPC_URL \
+    --rpc-url $RPC_URL \
     --private-key $PRIVATE_KEY \
     --constructor-args <EXECUTOR_ADDRESS> <WETH_ADDRESS>
 ```
@@ -125,9 +125,9 @@ forge create contracts/BundleExecutor.sol:FlashBotsMultiCall \
 ## Mainnet Deployment
 
 For mainnet deployment:
-1. Ensure `MAINNET_RPC_URL` is set in `.env`
-2. Run: `forge script script/deploy/DeployBundleExecutor.s.sol:DeployBundleExecutor --rpc-url $MAINNET_RPC_URL --broadcast --verify`
-3. The script automatically uses mainnet WETH address
+1. Set `RPC_URL` to a mainnet endpoint in `.env` (e.g., `https://eth.llamarpc.com`)
+2. Run: `./script/deploy-all-contracts.sh` or deploy individual contracts
+3. The script automatically uses the correct WETH address based on chain ID
 
 ## Contract Details
 

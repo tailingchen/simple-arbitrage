@@ -32,23 +32,23 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check if SEPOLIA_RPC_URL is set
-if [ -z "$SEPOLIA_RPC_URL" ]; then
-    echo -e "${RED}Error: SEPOLIA_RPC_URL not set in .env${NC}"
+# Check if RPC_URL is set
+if [ -z "$RPC_URL" ]; then
+    echo -e "${RED}Error: RPC_URL not set in .env${NC}"
     exit 1
 fi
 
-echo -e "${BLUE}🍴 Starting Anvil fork of Sepolia...${NC}"
+echo -e "${BLUE}🍴 Starting Anvil fork...${NC}"
 echo ""
 echo -e "${YELLOW}Configuration:${NC}"
-echo "  RPC URL: $SEPOLIA_RPC_URL"
+echo "  RPC URL: $RPC_URL"
 echo "  Fork Block: $FORK_BLOCK"
 echo "  Local Port: $PORT"
 echo ""
 
-# Start Anvil with Sepolia fork
+# Start Anvil fork
 anvil \
-    --fork-url $SEPOLIA_RPC_URL \
+    --fork-url $RPC_URL \
     --fork-block-number $FORK_BLOCK \
     --port $PORT \
     --accounts 10 \
