@@ -11,6 +11,7 @@ Environment Variables
 - **FLASHBOTS_RELAY_SIGNING_KEY** _[Optional, default: random]_ - Flashbots submissions require an Ethereum private key to sign transaction payloads. This newly-created account does not need to hold any funds or correlate to any on-chain activity, it just needs to be used across multiple Flashbots RPC requests to identify requests related to same searcher. Please see https://docs.flashbots.net/flashbots-auction/searchers/faq#do-i-need-authentication-to-access-the-flashbots-relay
 - **HEALTHCHECK_URL** _[Optional]_ - Health check URL, hit only after successfully submitting a bundle.
 - **MINER_REWARD_PERCENTAGE** _[Optional, default 80]_ - 0 -> 100, what percentage of overall profitability to send to miner.
+- **DRY_RUN** _[Optional, default true]_ - Set to "false" to enable LIVE mode and submit real bundles. By default, the bot runs in dry run mode (safe mode) where it simulates all operations but does NOT submit bundles to Flashbots. Only set to "false" when you're ready to submit real bundles!
 
 Usage
 ======================
@@ -22,8 +23,17 @@ _It is important to keep both the bot wallet private key and bundleExecutor owne
 
 ```
 $ npm install
+
+# Run in dry run mode (default, safe)
 $ PRIVATE_KEY=__PRIVATE_KEY_FROM_ABOVE__ \
     BUNDLE_EXECUTOR_ADDRESS=__DEPLOYED_ADDRESS_FROM_ABOVE__ \
     FLASHBOTS_RELAY_SIGNING_KEY=__RANDOM_ETHEREUM_PRIVATE_KEY__ \
+      npm run start
+
+# Run in LIVE mode (actually submit bundles)
+$ PRIVATE_KEY=__PRIVATE_KEY_FROM_ABOVE__ \
+    BUNDLE_EXECUTOR_ADDRESS=__DEPLOYED_ADDRESS_FROM_ABOVE__ \
+    FLASHBOTS_RELAY_SIGNING_KEY=__RANDOM_ETHEREUM_PRIVATE_KEY__ \
+    DRY_RUN=false \
       npm run start
 ```

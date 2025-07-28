@@ -2,6 +2,31 @@
 
 The MEV arbitrage bot now includes a comprehensive logging system to help track workflow and debug issues.
 
+## Dry Run Mode (Default)
+
+The bot runs in dry run mode by default for safety. In this mode:
+- All operations are performed normally (market evaluation, simulation, etc.)
+- Bundle submission is skipped
+- Detailed logs show what would have been submitted
+- Perfect for testing on mainnet without risk
+
+To enable LIVE mode (actual bundle submission):
+
+```bash
+# ⚠️  WARNING: This will submit real bundles!
+DRY_RUN=false npm run start
+```
+
+To explicitly run in dry run mode:
+
+```bash
+# Safe mode (default)
+DRY_RUN=true npm run start
+
+# Or simply omit DRY_RUN
+npm run start
+```
+
 ## Log Levels
 
 Set the log level using the `LOG_LEVEL` environment variable:
@@ -42,6 +67,7 @@ The logging system uses categories to organize different types of logs:
 - **SIMULATE** - Simulation results
 - **SUBMIT** - Bundle submission
 - **EXECUTE** - Execution status
+- **DRY-RUN** - Dry run mode notifications
 
 ## Special Formatted Logs
 
@@ -69,6 +95,20 @@ The system includes special formatting for important events:
   Effective Gas Price: 25.5 GWEI
   Profit to Miner: 0.05 ETH
 ───────────────────────────────────────────────────────────
+```
+
+### Dry Run Mode
+```
+[WARN ] [DRY-RUN] 🏃 DRY RUN - Bundle would be submitted to the following blocks:
+{
+  "targetBlocks": [12345678, 12345679],
+  "simulationResult": {
+    "profitToMiner": "0.05",
+    "effectiveGasPrice": "25.5 GWEI",
+    "totalGasUsed": "250000"
+  }
+}
+[INFO ] [DRY-RUN] Bundle submission skipped (dry run mode)
 ```
 
 ## Debug Mode

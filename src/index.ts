@@ -53,6 +53,12 @@ async function main() {
   logger.info('CONFIG', `Bundle Executor: ${BUNDLE_EXECUTOR_ADDRESS}`);
   logger.info('CONFIG', `Miner Reward: ${MINER_REWARD_PERCENTAGE}%`);
   
+  if (process.env.DRY_RUN !== 'false') {
+    logger.warn('CONFIG', '🏃 DRY RUN MODE - No bundles will be submitted');
+  } else {
+    logger.error('CONFIG', '⚠️  LIVE MODE ACTIVE - Real bundles will be submitted!');
+  }
+  
   const searcherAddress = await arbitrageSigningWallet.getAddress();
   const relaySignerAddress = await flashbotsRelaySigningWallet.getAddress();
   

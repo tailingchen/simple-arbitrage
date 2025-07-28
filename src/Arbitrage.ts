@@ -71,11 +71,20 @@ export class Arbitrage {
   private flashbotsProvider: FlashbotsBundleProvider;
   private bundleExecutorContract: Contract;
   private executorWallet: Wallet;
+  private isDryRun: boolean;
 
   constructor(executorWallet: Wallet, flashbotsProvider: FlashbotsBundleProvider, bundleExecutorContract: Contract) {
     this.executorWallet = executorWallet;
     this.flashbotsProvider = flashbotsProvider;
     this.bundleExecutorContract = bundleExecutorContract;
+    // Default to dry run mode unless explicitly set to 'false'
+    this.isDryRun = process.env.DRY_RUN !== 'false';
+    
+    if (this.isDryRun) {
+      logger.warn('CONFIG', '🏃 DRY RUN MODE ENABLED - Bundles will NOT be submitted to Flashbots');
+    } else {
+      logger.warn('CONFIG', '⚠️  LIVE MODE - Bundles WILL be submitted to Flashbots!');
+    }
   }
 
   static printCrossedMarket(crossedMarket: CrossedMarketDetails): void {
@@ -210,7 +219,7 @@ export class Arbitrage {
         logger.error('SIMULATE', 'Simulation failed', {
           token: bestCrossedMarket.tokenAddress,
           error: "error" in simulation ? simulation.error : 'Transaction reverted',
-          firstRevert: simulation.firstRevert
+          firstRevert: "firstRevert" in simulation ? simulation.firstRevert : "Unknown first revert"
         });
         continue
       }
@@ -222,20 +231,42 @@ export class Arbitrage {
         totalGasUsed: simulation.totalGasUsed.toString()
       });
       
-      logger.info('SUBMIT', `Submitting bundle for blocks ${blockNumber + 1} and ${blockNumber + 2}`);
-      const bundlePromises = _.map([blockNumber + 1, blockNumber + 2], targetBlockNumber => {
-        logger.debug('SUBMIT', `Sending to block ${targetBlockNumber}`);
-        return this.flashbotsProvider.sendRawBundle(
-          signedBundle,
-          targetBlockNumber
-        )
-      });
-      
-      await Promise.all(bundlePromises);
-      logger.success('BUNDLE', `Bundle sent to Flashbots relay for blocks ${blockNumber + 1} and ${blockNumber + 2}`);
+      // Submit bundle (or dry run)
+      await this.submitBundle(signedBundle, blockNumber, simulation);
       return
     }
     logger.error('BUNDLE', 'No arbitrage opportunities could be submitted to relay');
     throw new Error("No arbitrage submitted to relay")
+  }
+
+  private async submitBundle(signedBundle: string[], blockNumber: number, simulation: any): Promise<void> {
+    const targetBlocks = [blockNumber + 1, blockNumber + 2];
+    
+    if (this.isDryRun) {
+      logger.warn('DRY-RUN', '🏃 DRY RUN - Bundle would be submitted to the following blocks:', {
+        targetBlocks,
+        simulationResult: {
+          profitToMiner: bigNumberToDecimal(simulation.coinbaseDiff),
+          effectiveGasPrice: bigNumberToDecimal(simulation.coinbaseDiff.div(simulation.totalGasUsed), 9) + ' GWEI',
+          totalGasUsed: simulation.totalGasUsed.toString()
+        }
+      });
+      
+      logger.info('DRY-RUN', 'Bundle submission skipped (dry run mode)');
+      return;
+    }
+    
+    logger.info('SUBMIT', `Submitting bundle for blocks ${targetBlocks.join(', ')}`);
+    
+    const bundlePromises = targetBlocks.map(targetBlockNumber => {
+      logger.debug('SUBMIT', `Sending to block ${targetBlockNumber}`);
+      return this.flashbotsProvider.sendRawBundle(
+        signedBundle,
+        targetBlockNumber
+      );
+    });
+    
+    await Promise.all(bundlePromises);
+    logger.success('BUNDLE', `Bundle sent to Flashbots relay for blocks ${targetBlocks.join(', ')}`);
   }
 }
