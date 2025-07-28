@@ -7,7 +7,7 @@ import { ETHER } from "./utils";
 import { MarketsByToken } from "./Arbitrage";
 
 // batch count limit helpful for testing, loading entire set of uniswap markets takes a long time to load
-const BATCH_COUNT_LIMIT = 100;
+const BATCH_COUNT_LIMIT = 10; // Reduced from 100 for faster loading
 const UNISWAP_BATCH_SIZE = 1000
 
 // Not necessary, slightly speeds up loading initialization when we know tokens are bad
@@ -47,9 +47,11 @@ export class UniswappyV2EthPair extends EthMarket {
 
   static async getUniswappyMarkets(provider: providers.JsonRpcProvider, factoryAddress: string): Promise<Array<UniswappyV2EthPair>> {
     const uniswapQuery = new Contract(UNISWAP_LOOKUP_CONTRACT_ADDRESS, UNISWAP_QUERY_ABI, provider);
+    console.log(`Loading markets from factory: ${factoryAddress}`);
 
     const marketPairs = new Array<UniswappyV2EthPair>()
     for (let i = 0; i < BATCH_COUNT_LIMIT * UNISWAP_BATCH_SIZE; i += UNISWAP_BATCH_SIZE) {
+      console.log(`  Loading batch ${i / UNISWAP_BATCH_SIZE + 1}/${BATCH_COUNT_LIMIT}...`);
       const pairs: Array<Array<string>> = (await uniswapQuery.functions.getPairsByIndexRange(factoryAddress, i, i + UNISWAP_BATCH_SIZE))[0];
       for (let i = 0; i < pairs.length; i++) {
         const pair = pairs[i];
@@ -77,9 +79,11 @@ export class UniswappyV2EthPair extends EthMarket {
   }
 
   static async getUniswapMarketsByToken(provider: providers.JsonRpcProvider, factoryAddresses: Array<string>): Promise<GroupedMarkets> {
+    console.log(`Loading markets from ${factoryAddresses.length} factories...`);
     const allPairs = await Promise.all(
       _.map(factoryAddresses, factoryAddress => UniswappyV2EthPair.getUniswappyMarkets(provider, factoryAddress))
     )
+    console.log(`Loaded ${_.flatten(allPairs).length} total pairs`);
 
     const marketsByTokenAll = _.chain(allPairs)
       .flatten()
@@ -93,6 +97,7 @@ export class UniswappyV2EthPair extends EthMarket {
       .flatten()
       .value()
 
+    console.log(`Filtered to ${allMarketPairs.length} pairs with multiple markets`);
     await UniswappyV2EthPair.updateReserves(provider, allMarketPairs);
 
     const marketsByToken = _.chain(allMarketPairs)

@@ -1,3 +1,5 @@
+import { formatEther } from "ethers/lib/utils";
+
 // ANSI color codes
 const colors = {
   reset: '\x1b[0m',
@@ -105,8 +107,8 @@ class Logger {
     console.log(this.colorize(`${colors.bold}💰 ARBITRAGE OPPORTUNITY FOUND${colors.reset}`, colors.green));
     console.log(this.colorize('═══════════════════════════════════════════════════════════', colors.green));
     console.log(`  Token: ${this.colorize(market.tokenAddress, colors.yellow)}`);
-    console.log(`  Profit: ${this.colorize(`${colors.bold}${profit.toString()}${colors.reset}`, colors.green)} wei`);
-    console.log(`  Volume: ${this.colorize(volume.toString(), colors.cyan)} wei`);
+    console.log(`  Profit: ${this.colorize(`${colors.bold}${formatEther(profit)}${colors.reset}`, colors.green)} eth`);
+    console.log(`  Volume: ${this.colorize(formatEther(volume), colors.cyan)} eth`);
     console.log(`  Buy from: ${this.colorize(buyFrom.protocol, colors.blue)} @ ${buyFrom.marketAddress}`);
     console.log(`  Sell to: ${this.colorize(sellTo.protocol, colors.blue)} @ ${sellTo.marketAddress}`);
     console.log(this.colorize('═══════════════════════════════════════════════════════════', colors.green));
