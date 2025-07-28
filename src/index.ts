@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
 import { Contract, providers, Wallet } from "ethers";
 import { BUNDLE_EXECUTOR_ABI } from "./abi";
