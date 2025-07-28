@@ -25,17 +25,30 @@ cp .env.example .env
 
 ## Deploy to Sepolia
 
-Run the deployment script:
+### Deploy All Contracts
+To deploy both BundleExecutor and FlashBotsUniswapQuery:
 
 ```bash
-./deploy-sepolia.sh
+./script/deploy-all-contracts.sh
 ```
 
-This will:
-1. Use Foundry script to deploy the contract
-2. Automatically detect and use Sepolia WETH address
-3. Save deployment info to `deployments/sepolia.json`
-4. Verify the contract on Etherscan automatically
+### Deploy Individual Contracts
+
+#### BundleExecutor Only:
+```bash
+./script/deploy-bundle-executor.sh
+```
+
+#### FlashBotsUniswapQuery Only:
+```bash
+./script/deploy-uniswap-query.sh
+```
+
+All scripts will:
+1. Use Foundry script to deploy the contracts
+2. Automatically detect and use appropriate network settings
+3. Save deployment info to `deployments/` directory
+4. Verify the contracts on Etherscan automatically
 
 ## Manual Deployment
 
@@ -43,7 +56,7 @@ If you prefer to deploy manually:
 
 ```bash
 # Using Foundry script (recommended)
-forge script script/DeployBundleExecutor.s.sol:DeployBundleExecutor \
+forge script script/deploy/DeployBundleExecutor.s.sol:DeployBundleExecutor \
     --rpc-url $SEPOLIA_RPC_URL \
     --broadcast \
     --verify
@@ -57,9 +70,11 @@ forge create contracts/BundleExecutor.sol:FlashBotsMultiCall \
 
 ## Post-Deployment
 
-1. Check `deployments/sepolia.json` for the deployed contract address
+1. Check deployment files for contract addresses:
+   - BundleExecutor: `deployments/sepolia.json`
+   - FlashBotsUniswapQuery: `deployments/sepolia-query.json`
 2. Copy the `bundleExecutorAddress` to your `.env` file as `BUNDLE_EXECUTOR_ADDRESS`
-3. Fund the contract with WETH:
+3. Fund the BundleExecutor contract with WETH:
    - Send ETH to the contract address
    - Or deploy with `INITIAL_WETH_AMOUNT` set
 4. Update the runtime RPC URL if needed (should be different from Flashbots RPC)
@@ -68,15 +83,23 @@ forge create contracts/BundleExecutor.sol:FlashBotsMultiCall \
 
 For mainnet deployment:
 1. Ensure `MAINNET_RPC_URL` is set in `.env`
-2. Run: `forge script script/DeployBundleExecutor.s.sol:DeployBundleExecutor --rpc-url $MAINNET_RPC_URL --broadcast --verify`
+2. Run: `forge script script/deploy/DeployBundleExecutor.s.sol:DeployBundleExecutor --rpc-url $MAINNET_RPC_URL --broadcast --verify`
 3. The script automatically uses mainnet WETH address
 
 ## Contract Details
 
-The upgraded contract:
+### BundleExecutor
+- Executes arbitrage bundles atomically
+- Ensures WETH balance increases after execution
+- Supports miner reward payments
 - Uses Solidity ^0.8.29
-- WETH address is passed via constructor for flexibility
-- Supports any EVM chain with custom WETH address
+- WETH address is configurable via constructor
+
+### FlashBotsUniswapQuery
+- Efficiently queries multiple Uniswap pairs in a single call
+- Supports batch reserve queries
+- Can fetch pairs by index range from factory
+- Read-only helper contract
 
 ### Default WETH Addresses
 - **Sepolia**: `0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9`
