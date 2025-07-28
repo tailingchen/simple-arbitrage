@@ -2,7 +2,7 @@
 pragma solidity ^0.8.29;
 
 import "forge-std/Script.sol";
-import "../contracts/BundleExecutor.sol";
+import "../../contracts/BundleExecutor.sol";
 
 contract DeployBundleExecutor is Script {
     // WETH addresses

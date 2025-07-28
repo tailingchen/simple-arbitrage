@@ -2,7 +2,7 @@
 pragma solidity ^0.8.29;
 
 import "forge-std/Script.sol";
-import "../contracts/UniswapFlashQuery.sol";
+import "../../contracts/UniswapFlashQuery.sol";
 
 contract DeployUniswapFlashQuery is Script {
     function setUp() public {}

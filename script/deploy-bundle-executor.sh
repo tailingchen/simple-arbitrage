@@ -26,7 +26,7 @@ mkdir -p deployments
 
 # Deploy using Foundry script
 echo "Deploying contract using Foundry script..."
-forge script script/deploy/DeployBundleExecutor.s.sol:DeployBundleExecutor \
+forge script ./deploy/DeployBundleExecutor.s.sol:DeployBundleExecutor \
     --rpc-url $RPC_URL \
     --broadcast \
     --verify \

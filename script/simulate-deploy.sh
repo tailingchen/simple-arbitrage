@@ -25,6 +25,14 @@ fi
 
 # Create temporary env file for simulation
 TEMP_ENV=".env.simulate"
+
+# Check if .env exists
+if [ ! -f ".env" ]; then
+    echo -e "${RED}Error: .env file not found${NC}"
+    echo -e "${YELLOW}Please copy .env.example to .env and configure it${NC}"
+    exit 1
+fi
+
 cp .env $TEMP_ENV
 
 # Override with test values
@@ -46,10 +54,23 @@ echo ""
 
 # Run deployment with temporary env
 (
+    # Get the script directory and project root
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+    
+    # Change to project root
+    cd "$PROJECT_ROOT"
+    
     # Export the temp env vars
     set -a
     source $TEMP_ENV
     set +a
+    
+    # Debug output
+    echo "Current directory: $(pwd)"
+    echo "Script directory: $SCRIPT_DIR"
+    echo "Checking for deployment script..."
+    ls -la script/deploy/DeployBundleExecutor.s.sol
     
     # Deploy BundleExecutor
     echo -e "${BLUE}[1/2] Deploying BundleExecutor...${NC}"
@@ -60,7 +81,7 @@ echo ""
     
     if [ $? -ne 0 ]; then
         echo -e "${RED}BundleExecutor deployment failed!${NC}"
-        rm $TEMP_ENV
+        rm -f $TEMP_ENV
         exit 1
     fi
     
@@ -76,7 +97,7 @@ echo ""
     
     if [ $? -ne 0 ]; then
         echo -e "${RED}FlashBotsUniswapQuery deployment failed!${NC}"
-        rm $TEMP_ENV
+        rm -f $TEMP_ENV
         exit 1
     fi
     
@@ -84,14 +105,14 @@ echo ""
 )
 
 # Clean up
-rm $TEMP_ENV
+rm -f $TEMP_ENV
 
 echo ""
 echo -e "${GREEN}🎉 Simulation complete!${NC}"
 echo ""
 echo "Deployment files saved to:"
-echo "  - deployments/11155111.json (BundleExecutor)"
-echo "  - deployments/11155111-query.json (FlashBotsUniswapQuery)"
+echo "  - deployments/mainnet.json (BundleExecutor)"
+echo "  - deployments/mainnet-query.json (FlashBotsUniswapQuery)"
 echo ""
 echo -e "${YELLOW}Note: These are simulation deployments on a local fork.${NC}"
 echo -e "${YELLOW}To deploy to real network, use ./script/deploy-all-contracts.sh${NC}"

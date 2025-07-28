@@ -49,7 +49,6 @@ echo ""
 # Start Anvil fork
 anvil \
     --fork-url $RPC_URL \
-    --fork-block-number $FORK_BLOCK \
     --port $PORT \
     --accounts 10 \
     --balance 10000 \

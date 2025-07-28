@@ -26,7 +26,7 @@ mkdir -p deployments
 
 # Deploy using Foundry script
 echo "Deploying FlashBotsUniswapQuery contract..."
-forge script script/deploy/DeployUniswapFlashQuery.s.sol:DeployUniswapFlashQuery \
+forge script ./deploy/DeployUniswapFlashQuery.s.sol:DeployUniswapFlashQuery \
     --rpc-url $RPC_URL \
     --broadcast \
     --verify \
