@@ -1,7 +1,5 @@
 //SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.6.12;
-
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.29;
 
 interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -27,23 +25,24 @@ interface IWETH is IERC20 {
 // This contract simply calls multiple targets sequentially, ensuring WETH balance before and after
 
 contract FlashBotsMultiCall {
-    address private immutable owner;
-    address private immutable executor;
-    IWETH private constant WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address public immutable owner;
+    address public immutable executor;
+    IWETH public immutable WETH;
 
     modifier onlyExecutor() {
-        require(msg.sender == executor);
+        require(msg.sender == executor, "Only executor can call this function");
         _;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Only owner can call this function");
         _;
     }
 
-    constructor(address _executor) public payable {
+    constructor(address _executor, address _weth) payable {
         owner = msg.sender;
         executor = _executor;
+        WETH = IWETH(_weth);
         if (msg.value > 0) {
             WETH.deposit{value: msg.value}();
         }
@@ -52,30 +51,39 @@ contract FlashBotsMultiCall {
     receive() external payable {
     }
 
-    function uniswapWeth(uint256 _wethAmountToFirstMarket, uint256 _ethAmountToCoinbase, address[] memory _targets, bytes[] memory _payloads) external onlyExecutor payable {
-        require (_targets.length == _payloads.length);
+    function uniswapWeth(
+        uint256 _wethAmountToFirstMarket, 
+        uint256 _ethAmountToCoinbase, 
+        address[] memory _targets, 
+        bytes[] memory _payloads
+    ) external onlyExecutor payable {
+        require(_targets.length == _payloads.length, "Targets and payloads length mismatch");
         uint256 _wethBalanceBefore = WETH.balanceOf(address(this));
         WETH.transfer(_targets[0], _wethAmountToFirstMarket);
+        
         for (uint256 i = 0; i < _targets.length; i++) {
             (bool _success, bytes memory _response) = _targets[i].call(_payloads[i]);
-            require(_success); _response;
+            require(_success, "Target call failed");
+            _response; // Suppress unused variable warning
         }
 
         uint256 _wethBalanceAfter = WETH.balanceOf(address(this));
-        require(_wethBalanceAfter > _wethBalanceBefore + _ethAmountToCoinbase);
+        require(_wethBalanceAfter > _wethBalanceBefore + _ethAmountToCoinbase, "Insufficient profit");
+        
         if (_ethAmountToCoinbase == 0) return;
 
         uint256 _ethBalance = address(this).balance;
         if (_ethBalance < _ethAmountToCoinbase) {
             WETH.withdraw(_ethAmountToCoinbase - _ethBalance);
         }
-        block.coinbase.transfer(_ethAmountToCoinbase);
+        
+        payable(block.coinbase).transfer(_ethAmountToCoinbase);
     }
 
     function call(address payable _to, uint256 _value, bytes calldata _data) external onlyOwner payable returns (bytes memory) {
-        require(_to != address(0));
+        require(_to != address(0), "Invalid target address");
         (bool _success, bytes memory _result) = _to.call{value: _value}(_data);
-        require(_success);
+        require(_success, "Call failed");
         return _result;
     }
 }
